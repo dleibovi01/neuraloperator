@@ -38,8 +38,17 @@ class DarcyEqnLoss(object):
         lploss = LpLoss(d=2, reductions='mean') # todo: size_average=True
         return lploss.rel(left_hand_side, forcing_fn)
         
+             
+
+    def __call__(self, a, u, _):
+        return self.finite_difference(a, u)
         
-    def FC(self, a, u, domain_length_x=1, domain_length_y=1, d=5, C=25, A = torch.from_numpy(scipy.io.loadmat(f"FC_data/A_d5_C25.mat")['A']).double(), Q = torch.from_numpy(scipy.io.loadmat(f"FC_data/Q_d5_C25.mat")['Q']).double()):
+        
+class DarcyEqnFCLoss(object):
+    def __init__(self):
+        super().__init__()
+        
+    def FC_diff(self, a, u, domain_length_x=1, domain_length_y=1, d=5, C=25, A = torch.from_numpy(scipy.io.loadmat(f"FC_data/A_d5_C25.mat")['A']).double(), Q = torch.from_numpy(scipy.io.loadmat(f"FC_data/Q_d5_C25.mat")['Q']).double()):
 
 
         # remove extra channel dimensions
@@ -48,12 +57,7 @@ class DarcyEqnLoss(object):
         
         u = torch.squeeze(u)
         a = torch.squeeze(a)
-        print(u.size(0))
-        print(u.size(1))
-        print(u.size(2))
-        
-        
-        
+            
 	# Grid data
         ny = u.size(1)
         nx = u.size(2)
@@ -118,9 +122,10 @@ class DarcyEqnLoss(object):
         forcing_fn = torch.ones(left_hand_side.shape, device=u.device)
         lploss = LpLoss(d=2, reductions='mean') # todo: size_average=True
         return lploss.rel(left_hand_side, forcing_fn)        
-
+          
+        
     def __call__(self, a, u, _):
-        return self.finite_difference(a, u)
+        return self.FC_diff(a, u)        
         
         
         
