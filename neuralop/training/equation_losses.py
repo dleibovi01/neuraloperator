@@ -39,7 +39,7 @@ class DarcyEqnLoss(object):
         return lploss.rel(left_hand_side, forcing_fn)
         
         
-    def FC(self, a, u, A = torch.from_numpy(scipy.io.loadmat(f"FC_data/A_d5_C25.mat")['A']).double(), Q = torch.from_numpy(scipy.io.loadmat(f"FC_data/Q_d5_C25.mat")['Q']).double(), domain_length_x=1, domain_length_y=1, d=5, C=25):
+    def FC(self, a, u, domain_length_x=1, domain_length_y=1, d=5, C=25, A = torch.from_numpy(scipy.io.loadmat(f"FC_data/A_d5_C25.mat")['A']).double(), Q = torch.from_numpy(scipy.io.loadmat(f"FC_data/Q_d5_C25.mat")['Q']).double()):
 
 
         # remove extra channel dimensions
