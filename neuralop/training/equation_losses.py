@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import scipy.io
 from neuralop.training.data_losses import LpLoss
+from pathlib import Path
         
         
 
@@ -48,7 +49,7 @@ class DarcyEqnFCLoss(object):
     def __init__(self):
         super().__init__()
         
-    def FC_diff(self, a, u, domain_length_x=1, domain_length_y=1, d=5, C=25, A = torch.from_numpy(scipy.io.loadmat(f"FC_data/A_d5_C25.mat")['A']).double(), Q = torch.from_numpy(scipy.io.loadmat(f"FC_data/Q_d5_C25.mat")['Q']).double()):
+    def FC_diff(a, u, A = torch.from_numpy(scipy.io.loadmat(Path(__file__).resolve().parent.joinpath("FC_data/A_d5_C25.mat"))['A']).double(), Q =    torch.from_numpy(scipy.io.loadmat(Path(__file__).resolve().parent.joinpath("FC_data/Q_d5_C25.mat"))['Q']).double(), domain_length_x=1, domain_length_y=1, d=5, C=25):
 
 
         # remove extra channel dimensions
