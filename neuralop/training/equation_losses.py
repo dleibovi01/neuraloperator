@@ -91,8 +91,8 @@ class DarcyEqnFCLoss(object):
                     torch.arange(start = - k_max, end = 0, step = 1, device = 'cpu')), 0).reshape(fourPtsy, 1).repeat(1, ny)	                        
 	
 	     
-        der_coeffsx = - 4 * np.pi * np.pi / prdx / prdx * k_x * k_x
-        der_coeffsy = - 4 * np.pi * np.pi / prdy / prdy * k_y * k_y
+        der_coeffsx = 1j * 2.0 * np.pi / prdx * k_x
+        der_coeffsy = 1j * 2.0 * np.pi / prdy * k_y
 
 
         # compute derivatives along the x-direction
@@ -101,7 +101,8 @@ class DarcyEqnFCLoss(object):
         ucont = torch.cat([u,y1+y2], dim=2)
         uhat = torch.fft.fft(ucont, dim=2)
         uder = torch.fft.ifft(uhat * der_coeffsx).real
-        uxx = uder[:, 1:-1, 1:nx-1]	
+        # ux = uder[:, 1:-1, 1:nx-1]	
+        ux = uder[:, :, :nx]	
         
      
         # compute derivatives along the y-direction
@@ -110,12 +111,37 @@ class DarcyEqnFCLoss(object):
         ucont = torch.cat([u,y1+y2], dim=1)
         uhat = torch.fft.fft(ucont, dim=1)
         uder = torch.fft.ifft(uhat * der_coeffsy, dim=1).real
-        uyy = uder[:, 1:ny-1, 1:-1]	
+        # uy = uder[:, 1:ny-1, 1:-1]	
+        uy = uder[:, :ny, :]
         
 
-        a = a[:, 1:-1, 1:-1]
-        a_uxx = a * uxx
-        a_uyy = a * uyy
+        # a = a[:, 1:-1, 1:-1]
+        a_ux = a * ux
+        a_uy = a * uy
+
+
+        # compute derivatives along the x-direction
+        y1 = torch.einsum("hik,jk->hij", torch.einsum("hik,kj->hij", a_ux[:, :, -d:], Q), A)
+        y2 = torch.flip(torch.einsum("hik,jk->hij", torch.einsum("hik,kj->hij", torch.flip(a_ux[:, :, :d], dims=(2,)), Q), A), dims=(2,))
+        ucont = torch.cat([a_ux,y1+y2], dim=2)
+        uhat = torch.fft.fft(ucont, dim=2)
+        uder = torch.fft.ifft(uhat * der_coeffsx).real
+        # a_uxx = uder[:, 1:-1, 1:nx-1]	
+        a_uxx = uder[:, :, :nx]	
+        
+     
+        # compute derivatives along the y-direction
+        y1 = torch.einsum("ikl,jk->ijl", torch.einsum("ikl,kj->ijl", a_uy[:, -d:, :], Q), A)        
+        y2 = torch.flip(torch.einsum("ikl,jk->ijl", torch.einsum("ikl,kj->ijl", torch.flip(a_uy[:, :d, :], dims=(1,)), Q), A), dims=(1,))
+        ucont = torch.cat([a_uy,y1+y2], dim=1)
+        uhat = torch.fft.fft(ucont, dim=1)
+        uder = torch.fft.ifft(uhat * der_coeffsy, dim=1).real
+        # a_uyy = uder[:, 1:ny-1, 1:-1]	
+        a_uyy = uder[:, :ny, :]	
+
+
+        left_hand_side =  -(a_uxx + a_uyy)
+
 
         left_hand_side =  -(a_uxx + a_uyy)	
         
